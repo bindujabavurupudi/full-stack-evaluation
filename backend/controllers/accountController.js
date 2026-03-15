@@ -51,3 +51,14 @@ export const login = async(req,res)=>{
         user
     })
 }
+
+export const getStatement = async(req,res)=>{
+
+    const {data} = await supabase
+        .from("transactions")
+        .select("*")
+        .or(`sender_id.eq.${req.user.id},receiver_id.eq.${req.user.id}`)
+        .order("created_at",{ascending:false})
+
+    res.json(data)
+}
