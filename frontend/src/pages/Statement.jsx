@@ -18,7 +18,7 @@ const Statement = () => {
         }
       }
     )
-    .then(res => setTransactions(res.data))
+    .then(res => setTransactions(res.data || []))
 
   }, [])
 

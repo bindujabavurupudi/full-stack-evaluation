@@ -18,12 +18,15 @@ export const signup = async(req,res)=>{
                 id,
                 name,
                 email,
-                password:hashedPassword,
-                balance:10000
+                password: hashedPassword,
+                balance: 10000
             }
         ])
 
-    if(error) return res.status(400).json(error)
+    if(error){
+        console.log("Signup Error:", error)
+        return res.status(400).json(error)
+    }
 
     res.json({message:"User created"})
 }
@@ -43,7 +46,9 @@ export const login = async(req,res)=>{
     const match = await bcrypt.compare(password,user.password)
 
     if(!match) return res.status(400).json({message:"Wrong password"})
-
+if(!user || !email || !password){
+    return res.status(400).json({message:"All fields required"})
+}
     const token = generateToken(user)
 
     res.json({

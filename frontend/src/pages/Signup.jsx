@@ -30,6 +30,7 @@ const Signup = () => {
 
     } catch (err) {
 
+      console.log(err.response?.data)   // 🔹 important for debugging
       alert("Signup failed")
 
     }

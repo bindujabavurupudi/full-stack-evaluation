@@ -13,56 +13,74 @@ export const getBalance = async(req,res)=>{
 }
 
 
-export const transferMoney = async(req,res)=>{
+export const transferMoney = async (req, res) => {
 
-    const {receiverEmail,amount} = req.body
+  try {
 
-    const {data:sender} = await supabase
-        .from("users")
-        .select("*")
-        .eq("id",req.user.id)
-        .single()
+    const { receiverEmail, amount } = req.body
 
-    const {data:receiver} = await supabase
-        .from("users")
-        .select("*")
-        .eq("email",receiverEmail)
-        .single()
+    const { data: sender } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", req.user.id)
+      .single()
 
-    if(sender.balance < amount)
-        return res.status(400).json({message:"Insufficient balance"})
+    if (!sender) {
+      return res.status(400).json({ message: "Sender not found" })
+    }
+
+    const { data: receiver } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", receiverEmail)
+      .single()
+
+    if (!receiver) {
+      return res.status(400).json({ message: "Receiver not found" })
+    }
+
+    if (sender.balance < amount) {
+      return res.status(400).json({ message: "Insufficient balance" })
+    }
 
     const senderBalance = sender.balance - amount
     const receiverBalance = receiver.balance + amount
 
-    await supabase.from("users")
-        .update({balance:senderBalance})
-        .eq("id",sender.id)
+    await supabase
+      .from("users")
+      .update({ balance: senderBalance })
+      .eq("id", sender.id)
 
-    await supabase.from("users")
-        .update({balance:receiverBalance})
-        .eq("id",receiver.id)
+    await supabase
+      .from("users")
+      .update({ balance: receiverBalance })
+      .eq("id", receiver.id)
 
-    const transactionId = uuidv4()
-
-    await supabase.from("transactions").insert([
+    await supabase
+      .from("transactions")
+      .insert([
         {
-            id:transactionId,
-            sender_id:sender.id,
-            receiver_id:receiver.id,
-            amount,
-            transaction_type:"debit"
+          sender_id: sender.id,
+          receiver_id: receiver.id,
+          amount,
+          transaction_type: "debit"
         },
         {
-            id:uuidv4(),
-            sender_id:sender.id,
-            receiver_id:receiver.id,
-            amount,
-            transaction_type:"credit"
+          sender_id: sender.id,
+          receiver_id: receiver.id,
+          amount,
+          transaction_type: "credit"
         }
-    ])
+      ])
 
-    res.json({message:"Transfer successful"})
+    res.json({ message: "Transfer successful" })
+
+  } catch (err) {
+
+    console.log("TRANSFER ERROR:", err)
+
+    res.status(500).json({ message: "Transfer failed" })
+  }
 }
 export const getStatement = async(req,res)=>{
 
